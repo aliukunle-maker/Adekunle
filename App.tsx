@@ -1,4 +1,5 @@
 
+
 import React, { useState, useMemo, useCallback, useEffect, createContext, useContext, useRef } from 'react';
 import { Routes, Route, NavLink, useLocation } from 'react-router-dom';
 import { UserRole, StudentRole, type User, type Assignment, type Quiz, type VideoUpload, type Submission, type Announcement, type Course, type AssignmentTemplate } from './types';
@@ -1162,12 +1163,6 @@ const LoginPage: React.FC<{ onLogin: (username: string, password: string) => boo
             setError('Invalid username or password.');
         }
     };
-    
-    // Auto-fill for user convenience
-    useEffect(() => {
-        setUsername('Adekunle');
-        setPassword('Opemipo@1');
-    }, []);
 
     return (
         <div className="flex items-center justify-center min-h-screen bg-gray-100 dark:bg-gray-900 p-4">
@@ -1293,21 +1288,51 @@ export default function App() {
 
     const handleCreateCourse = (name: string, code: string) => {
         if (!loggedInUser || loggedInUser.role !== UserRole.Teacher) return;
+
+        const trimmedName = name.trim();
+        const trimmedCode = code.trim();
+
+        const nameExists = courses.some(course => course.name.toLowerCase() === trimmedName.toLowerCase());
+        const codeExists = courses.some(course => course.code.toLowerCase() === trimmedCode.toLowerCase());
+
+        if (nameExists) {
+            alert('A course with this name already exists. Please use a different name.');
+            return;
+        }
+        if (codeExists) {
+            alert('A course with this code already exists. Please use a different code.');
+            return;
+        }
+
         const newCourse: Course = {
             id: `course${Date.now()}`,
-            name,
-            code,
+            name: trimmedName,
+            code: trimmedCode,
             teacherId: loggedInUser.id,
         };
         setCourses(prev => [...prev, newCourse]);
-        // Also add course to teacher
         const updatedUser = { ...loggedInUser, courseIds: [...loggedInUser.courseIds, newCourse.id] };
         setLoggedInUser(updatedUser);
         setAllUsers(prev => prev.map(u => u.id === loggedInUser.id ? updatedUser : u));
     };
 
     const handleUpdateCourse = (id: string, name: string, code: string) => {
-        setCourses(prev => prev.map(c => c.id === id ? { ...c, name, code } : c));
+        const trimmedName = name.trim();
+        const trimmedCode = code.trim();
+
+        const nameExists = courses.some(course => course.id !== id && course.name.toLowerCase() === trimmedName.toLowerCase());
+        const codeExists = courses.some(course => course.id !== id && course.code.toLowerCase() === trimmedCode.toLowerCase());
+
+        if (nameExists) {
+            alert('Another course with this name already exists. Please use a different name.');
+            return;
+        }
+        if (codeExists) {
+            alert('Another course with this code already exists. Please use a different code.');
+            return;
+        }
+        
+        setCourses(prev => prev.map(c => c.id === id ? { ...c, name: trimmedName, code: trimmedCode } : c));
     };
 
     const handleDeleteCourse = () => {
